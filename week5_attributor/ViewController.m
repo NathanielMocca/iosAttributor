@@ -7,6 +7,8 @@
 //
 
 #import "ViewController.h"
+#import "SecondViewController.h"
+
 
 @interface ViewController ()
 @property (weak, nonatomic) IBOutlet UITextView *mainTextView;
@@ -72,7 +74,7 @@
 
 -(void)hightLightText:(NSString *)srcTxt{
     NSLog(@"highlight");
-    int srcTxtLen = [srcTxt length];
+    unsigned long srcTxtLen = [srcTxt length];
     int idx = 0;
     while (idx<(self.mainTextView.text.length-srcTxtLen)) {
         NSRange srcRange = NSMakeRange(idx, srcTxtLen);
@@ -87,11 +89,15 @@
     }
 }
 
-- (void)searchBarTextDidEndEditing:(UISearchBar *)searchBar{
+- (void)searchBarTextDidEndEditing:(UISearchBar *)searchBar {
     NSMutableAttributedString *attrStr =[[NSMutableAttributedString alloc] initWithAttributedString:[[self mainTextView] attributedText]];
     NSRange wholeRange = NSMakeRange(0, [[self mainTextView].text length]);
     [attrStr removeAttribute:NSBackgroundColorAttributeName range:wholeRange];
     [[self mainTextView] setAttributedText:attrStr];
+}
+
+-(void)preferFontStleChange:(NSNotification *)notification {
+    self.mainTextView.font = [UIFont preferredFontForTextStyle:UIFontTextStyleBody];
 }
 
 - (void)viewDidLoad {
@@ -101,6 +107,28 @@
 
 }
 
+- (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender {
+    // Get the new view controller using [segue destinationViewController].
+    // Pass the selected object to the new view controller.
+    
+    if([segue.identifier isEqualToString:@"ShowResult"]) {
+        SecondViewController *vc2 = [segue destinationViewController];
+        NSAttributedString *attrStr =[[NSMutableAttributedString alloc] initWithAttributedString:[[self mainTextView] attributedText]];
+        vc2.passedtext = attrStr;
+    }
+}
+
+-(void)viewWillAppear:(BOOL)animated {
+    [super viewWillAppear: animated];
+    //新增廣播接收設定變化
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(preferFontStleChange:) name:UIContentSizeCategoryDidChangeNotification object:nil];
+}
+
+-(void)viewWillDisappear:(BOOL)animated {
+    [super viewWillDisappear: animated];
+    //刪除廣播
+    [[NSNotificationCenter defaultCenter] removeObserver:self name:UIContentSizeCategoryDidChangeNotification object:nil];
+}
 
 - (void)didReceiveMemoryWarning {
     [super didReceiveMemoryWarning];
